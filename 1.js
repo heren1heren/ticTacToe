@@ -1,95 +1,111 @@
-const Gameboard = {
-  arr: [['','',''],['','',''], ['','','']],
-  marking: function(player,choiceNumber) {
-      const row  = Math.floor((choiceNumber-1) / 3)
-      const column = (choiceNumber - 1) % 3 
-      if(this.arr[row][column] == '') {
-    this.arr[row][column] = player.symbol;
-     };
-
-    },
-     trackSymbol(symbol,player1, player2) {
-       if (symbol == player1.symbol) return player1
-       else return player2
-     },
-     checkArrFull(arr) {
-        for(let i = 0; i < 3; i++) {
-            for( let j = 0; j < 3; j++) {
-                return  this.arr[i][j] == ''? false: true;
-            }
-        }
-     },
-
-    giveResult:  function(player1,player2) {
-      
-        let rowCount = 0, columnCount = 0, diagonalCount = 0;
-
-        for(let i = 0; i < 3; i++) {
-            for(let j = 1; j < 3; j++) {
-                 if (this.arr[i][j] == this.arr[i][j - 1])
-                 rowCount++
-                else rowCount = 0;
-                 if (rowCount == 2) return this.trackSymbol(this.arr[i][j],player1,player2) 
-
-               if ( this.arr[j][i] == this.arr[j - 1][i])
-                columnCount++;
-            else rowCount = 0;
-               if(columnCount == 2) return this.trackSymbol(this.arr[i][j],player1,player2);
-            
-            }
-
-        }
-       for(let i = 1; i < 3; i++) {
-
-        if (this.arr[i][i] = this.arr[i-1][i-1])
-          diagonalCount++;
-        else diagonalCount = 0;
-        if (diagonalCount == 2) return this.trackSymbol(arr[i][i],player1,player2)
-       }
-       if (this.arr[0][2] === this.arr[1][1] && this.arr[1][1] === this.arr[2][0]) {
-
-        return this.trackSymbol(this.arr[1][1], player1, player2);
+ const Game = (function(){
+   const restartButton = document.querySelector('#restartButton');
+   const SHOW_CLASS = 'show';
+   const X_CLASS = 'x' // define Macro class for classlist
+   const CIRCLE_CLASS = 'circle' // define Macro class for classlist
+   const cellElements = document.querySelectorAll('[data-cell]');
+   const board = document.querySelector('#board')
+   const allWinWay  = [
+     [0,1,2], //row
+     [3,4,5],
+     [6,7,8],
+     [0,4,8], //diagonal
+     [2,4,6],
+     [0,3,6],// column
+     [1,4,7],
+     [2,5,8],
+   ]
+   const winningMessage = document.getElementById('winningMessage');
+   const winningMessageText = document.querySelector('[data-winning-message-text]');
+   let circleTurn = false;
+   function startGame() {
+  
+     cellElements.forEach(cell => {
+      cell.classList.remove(X_CLASS);
+      cell.classList.remove(CIRCLE_CLASS);})
+      cellElements.forEach(cell => {
+        cell.addEventListener('click',handleClick,
+        {once:true})
+      })
+      setBoardHover()
+  
+   }
+   restartButton.addEventListener('click', handleRestartButton);
+  
+   function handleRestartButton() {
+  
+     winningMessageText.textContent = '';
+     winningMessage.classList.remove(SHOW_CLASS);
+     startGame();
+   }
+  
+  function setBoardHover(circleTurn) {
+  
+      board.classList.remove(X_CLASS);
+      board.classList.remove(CIRCLE_CLASS);
+      if(circleTurn) { 
+        board.classList.add(CIRCLE_CLASS);
+      } else {
+        board.classList.add(X_CLASS);
       }
-      if(this.checkArrFull) {
-          return console.log('this is a draw'); 
-      }
-    }
-}
-  function Player(name, marker) {
-    let score = 0;
-      const getScore = function() {
-        return score
-      }
-
-      return {
-        getScore,
-          name, 
-          symbol: marker,
-        }
-    }
-
-    const player1 = Player('noBody', 'X');
-    const player2 = Player('Master', 'O');
-    Gameboard.marking(player1, 1);
-    Gameboard.marking(player2,2);
-    Gameboard.marking(player1,3);
-    Gameboard.marking(player2,4);
-    Gameboard.marking(player2,5);
-    Gameboard.marking(player1,6);
-    Gameboard.marking(player1,7);   
-    Gameboard.marking(player1,8);
-    Gameboard.marking(player2,9);     
-   console.log(Gameboard.arr);
-   console.log(Gameboard.giveResult(player1,player2))
-// an object name control to works with it method instead of polluting global scope.
-const control = (function() { // IIFE
-    const resetGameboard = (Gameboard) => {// array function or function()?
-         Gameboard.arr = [['','',''],['','',''], ['','','']]
-    }
-    const scoring = () => { // logic for scoring 
-
-    } 
-    const displayWinner = () => {
-        //logic for displaying
-    }
-})();
+  }
+  
+  function handleClick(event) {
+    //choose currentClass for placeMark 
+     const  currentClass = circleTurn ?  CIRCLE_CLASS : X_CLASS;
+     const currentTarget = event.target;
+  
+    placeMark(currentClass,currentTarget);
+  
+  
+     if (checkWinner(currentClass)) {
+       winningMessageText.textContent = ` ${currentClass} Wins`
+       winningMessage.classList.add(SHOW_CLASS);
+     } else if (checkDraw()) {
+      winningMessageText.textContent = `Drawsssss`;
+      winningMessage.classList.add(SHOW_CLASS);
+     }
+     swapTurn();
+     setBoardHover(circleTurn);
+  }
+  
+  function placeMark(currentClass,currentTarget) {
+    if(currentTarget.classList.contains(CIRCLE_CLASS) || currentTarget.classList.contains(X_CLASS)) return
+      currentTarget.classList.add(currentClass);
+          
+      // link class with allWinWay array don't need to link 
+         
+  }
+  
+  function checkWinner(currentClass) {
+  //  loop through allWinWay -> access each array 
+  //-> check if there is an array that 3 element of the array = currentClass
+       return allWinWay.some(subArr => {
+        return subArr.every(index => {
+          // link boolean from cellElements(dom) and index from an array
+          return cellElements[index].classList.contains(currentClass) 
+        })
+       })
+  }
+  
+  function checkDraw() {
+    // check if the allWinWay is full of element
+    return allWinWay.every(subArr => {
+      return subArr.every(index => {
+        return cellElements[index].classList.contains(X_CLASS) || cellElements[index].classList.contains(CIRCLE_CLASS);
+      })
+  
+    })
+  }
+  
+  
+  function swapTurn() {
+    return circleTurn = !circleTurn;
+  }      
+ 
+ 
+  return {startGame}
+})()
+ 
+   Game.startGame()
+ 
